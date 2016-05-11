@@ -172,12 +172,12 @@ class DocRepo(object):
             extension.finalize()
         self.doc_database.finalize()
 
-    # pylint: disable=no-self-use
     def get_private_folder(self):
         """
         Banana banana
         """
-        return os.path.abspath('hotdoc-private')
+        folder_name = '.' + os.path.basename(self.__conf_file) + '-private'
+        return os.path.abspath(os.path.join(self.output, folder_name))
 
     def resolve_config_path(self, path):
         """
@@ -423,7 +423,7 @@ class DocRepo(object):
             raise ConfigError("Unsupported output format : %s" %
                               self.output_format)
         self.__create_change_tracker()
-        self.__setup_folder('hotdoc-private')
+        self.__setup_folder(self.get_private_folder())
         self.__setup_database()
         self.__index_file = self.resolve_config_path(config.get('index'))
 
