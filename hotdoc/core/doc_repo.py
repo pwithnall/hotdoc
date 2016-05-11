@@ -4,6 +4,7 @@ Core of the core.
 
 import argparse
 import cPickle as pickle
+import errno
 import json
 import os
 import shutil
@@ -383,12 +384,14 @@ class DocRepo(object):
         wizard.config.update(cli)
 
     def __setup_folder(self, folder):
-        if os.path.exists(folder):
-            if not os.path.isdir(folder):
-                print "Folder %s exists but is not a directory" % folder
-                raise ConfigError()
-        else:
-            os.mkdir(folder)
+        try:
+            os.makedirs(folder)
+        except OSError as e:
+            if e.errno == errno.EEXIST and not os.path.isdir(folder):
+                    print "Folder %s exists but is not a directory" % folder
+                    raise ConfigError()
+            elif e.errno != errno.EEXIST:
+                raise e
 
     def __create_extensions(self, args):
         for ext_class in self.__extension_classes.values():
@@ -432,8 +435,7 @@ class DocRepo(object):
         self.include_paths |= OrderedSet(cmd_line_includes)
         gen_folder = self.get_generated_doc_folder()
         self.include_paths.add(gen_folder)
-        if not os.path.exists(gen_folder):
-            os.makedirs(gen_folder)
+        self.__setup_folder(gen_folder)
 
         self.doc_tree = DocTree(self.include_paths, self.get_private_folder())
 
